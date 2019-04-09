@@ -184,8 +184,7 @@ module.exports = function() {
     },
     collect: collectCycles,
     check: function() {
-      if (count) throw Error("leak");
-      console.log("[ OK ]");
+      if (count) throw Error("leaking " + count + " objects");
     }
   };
 };

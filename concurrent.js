@@ -1,5 +1,7 @@
 module.exports = function() {
 
+  // Fig. 9. Concurrent Cycle Collection Algorithm
+
   const Color = {
     /** In use or free. */
     BLACK: "BLACK",
@@ -327,12 +329,11 @@ module.exports = function() {
     },
     check: function() {
       if (count) {
-        console.log("@roots", roots);
-        console.log("@currentCycle", currentCycle);
-        console.log("@cycleBuffer", cycleBuffer);
-        throw Error("leak");
+        console.log("- roots:", roots);
+        console.log("- currentCycle:", currentCycle);
+        console.log("- cycleBuffer:", cycleBuffer);
+        if (count) throw Error("leaking " + count + " objects");
       }
-      console.log("[ OK ]");
     }
   };
 };
