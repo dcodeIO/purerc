@@ -169,7 +169,7 @@ module.exports = function() {
 
   function free(s) {
     --count;
-    console.log("free(" + s + ") remain=" + count);
+    console.log("free(" + s + ") count=" + count);
   }
 
   return {

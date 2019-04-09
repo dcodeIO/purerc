@@ -40,7 +40,10 @@ module.exports = function() {
 
     remove(s) {
       var i = this.children.indexOf(s);
-      if (~i) decrement(this.children.splice(i, 1)[0]);
+      if (~i) {
+        this.children.splice(i, 1);
+        decrement(s);
+      }
     }
   
     toString() {
@@ -197,6 +200,7 @@ module.exports = function() {
   }
 
   function sigmaPreparation() {
+    console.log("sigmaPreparation");
     for (let ci = 0, ck = cycleBuffer.length; ci < ck; ++ci) {
       let c = cycleBuffer[ci];
       for (let ni = 0, nk = c.length; ni < nk; ++ni) {
@@ -221,6 +225,7 @@ module.exports = function() {
   }
 
   function freeCycles() {
+    console.log("freeCycles");
     var last = cycleBuffer.length - 1;
     for (let ci = last; ci >= 0; --ci) {
       let c = cycleBuffer[ci];
@@ -234,6 +239,7 @@ module.exports = function() {
   }
 
   function deltaTest(c) {
+    console.log("deltaTest(" + c + ")");
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
       if (n.color != Color.ORANGE) {
@@ -244,6 +250,7 @@ module.exports = function() {
   }
 
   function sigmaTest(c) {
+    console.log("sigmaTest(" + c + ")");
     var externRC = 0;
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
@@ -253,6 +260,7 @@ module.exports = function() {
   }
 
   function refurbish(c) {
+    console.log("refurbish(" + c + ")");
     var first = true;
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
@@ -268,6 +276,7 @@ module.exports = function() {
   }
 
   function freeCycle(c) {
+    console.log("freeCycle(" + c + ")");
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
       n.color = Color.RED;
@@ -286,6 +295,7 @@ module.exports = function() {
   }
 
   function cyclicDecrement(m) {
+    console.log("cyclicDecrement(" + m + ")");
     if (m.color != Color.RED) {
       if (m.color == Color.ORANGE) {
         m.rc = m.rc - 1;
@@ -298,7 +308,7 @@ module.exports = function() {
 
   function free(s) {
     --count;
-    console.log("free(" + s + ") remain=" + count);
+    console.log("free(" + s + ") count=" + count);
   }
 
   return {
@@ -311,9 +321,17 @@ module.exports = function() {
       if (s) decrement(s);
       return s;
     },
-    collect: collectCycles,
+    collect: function() {
+      collectCycles();
+      collectCycles();
+    },
     check: function() {
-      if (count) throw Error("leak");
+      if (count) {
+        console.log("@roots", roots);
+        console.log("@currentCycle", currentCycle);
+        console.log("@cycleBuffer", cycleBuffer);
+        throw Error("leak");
+      }
       console.log("[ OK ]");
     }
   };
