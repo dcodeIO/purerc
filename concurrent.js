@@ -206,8 +206,8 @@ module.exports = function() {
     // zero, the CRC is decremented (the check for non-zero is necessary because concurrent
     // mutation could otherwise cause the CRC to underflow).
 
-    // But the CRC decrement in particular seems odd, leading to the issue noted in scan below. If
-    // we instead stick to the synchronous algorithm, make it use CRC and do the non-zero check:
+    // But the CRC decrement in the else clause in particular seems odd, because it doesn't cover
+    // any children like the synchronous algorithm does, leading to the issue noted in scan below.
 
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
