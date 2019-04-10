@@ -1,4 +1,8 @@
-module.exports = function() {
+function log(msg) {
+  if (!gc.silent) console.log(msg);
+}
+
+function gc() {
 
   // Fig. 7. Synchronous Cycle Collection
 
@@ -26,7 +30,7 @@ module.exports = function() {
       this.buffered = false;
       this.children = [];
       ++count;
-      console.log("create(" + this + ") count=" + count);
+      log("create(" + this + ") count=" + count);
     }
 
     get color() {
@@ -34,7 +38,7 @@ module.exports = function() {
     }
 
     set color(color) {
-      console.log(" " + this.name + ": " + this._color + " -> " + color);
+      log(" " + this.name + ": " + this._color + " -> " + color);
       this._color = color;
     }
 
@@ -73,17 +77,17 @@ module.exports = function() {
   var roots = [];
 
   function increment(s) {
-    console.log("increment(" + s + ")");
+    log("increment(" + s + ")");
     s.rc = s.rc + 1;
     s.color = Color.BLACK;
   }
 
   function decrement(s) {
-    console.log("decrement(" + s + ")");
+    log("decrement(" + s + ")");
 
     s.rc = s.rc - 1;
     if (s.rc == 0) {
-      console.log("release(" + s + ")");
+      log("release(" + s + ")");
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
         decrement(t);
@@ -94,7 +98,7 @@ module.exports = function() {
       }
 
     } else if (!s.isAcyclic) {
-      console.log("possibleRoot(" + s + ")");
+      log("possibleRoot(" + s + ")");
       if (s.color != Color.PURPLE) {
         s.color = Color.PURPLE;
         if (!s.buffered) {
@@ -107,7 +111,7 @@ module.exports = function() {
   }
 
   function collectCycles() {
-    console.log("collectCycles");
+    log("collectCycles");
 
     // markRoots
     var k = 0;
@@ -142,7 +146,7 @@ module.exports = function() {
   }
 
   function markGray(s) {
-    console.log("markGray(" + s + ")");
+    log("markGray(" + s + ")");
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
@@ -154,7 +158,7 @@ module.exports = function() {
   }
 
   function scan(s) {
-    console.log("scan(" + s + ")");
+    log("scan(" + s + ")");
     if (s.color == Color.GRAY) {
       if (s.rc > 0) {
         scanBlack(s);
@@ -169,7 +173,7 @@ module.exports = function() {
   }
 
   function scanBlack(s) {
-    console.log("scanBlack(" + s + ")");
+    log("scanBlack(" + s + ")");
     s.color = Color.BLACK;
     for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
       let t = s.children[ti];
@@ -181,7 +185,7 @@ module.exports = function() {
   }
 
   function collectWhite(s) {
-    console.log("collectWhite(" + s + ")");
+    log("collectWhite(" + s + ")");
     if (s.color == Color.WHITE && !s.buffered) {
       s.color = Color.BLACK;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
@@ -194,7 +198,7 @@ module.exports = function() {
 
   function free(s) {
     --count;
-    console.log("free(" + s + ") count=" + count);
+    log("free(" + s + ") count=" + count);
   }
 
   return {
@@ -213,3 +217,5 @@ module.exports = function() {
     }
   };
 };
+
+module.exports = gc;

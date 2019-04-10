@@ -1,4 +1,8 @@
-module.exports = function() {
+function log(msg) {
+  if (!gc.silent) console.log(msg);
+}
+
+function gc() {
 
   // Fig. 9. Concurrent Cycle Collection Algorithm
 
@@ -32,7 +36,7 @@ module.exports = function() {
       this.children = [];
       this.freed = false;
       ++count;
-      console.log("create(" + this + ") count=" + count);
+      log("create(" + this + ") count=" + count);
     }
 
     get isAcyclic() {
@@ -56,7 +60,7 @@ module.exports = function() {
     }
 
     set color(color) {
-      console.log(" " + this.name + ": " + this._color + " -> " + color);
+      log(" " + this.name + ": " + this._color + " -> " + color);
       this._color = color;
     }
 
@@ -87,13 +91,13 @@ module.exports = function() {
   var cycleBuffer = [];
 
   function increment(s) {
-    console.log("increment(" + s + ")");
+    log("increment(" + s + ")");
     s.rc = s.rc + 1;
     scanBlack(s);
   }
 
   function decrement(s) {
-    console.log("decrement(" + s + ")");
+    log("decrement(" + s + ")");
     s.rc = s.rc - 1;
     if (s.rc == 0) {
       release(s);
@@ -103,7 +107,7 @@ module.exports = function() {
   }
 
   function release(s) {
-    console.log("release(" + s + ")");
+    log("release(" + s + ")");
     for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
       let t = s.children[ti];
       decrement(t);
@@ -115,7 +119,7 @@ module.exports = function() {
   }
 
   function possibleRoot(s) {
-    console.log("possibleRoot(" + s + ")");
+    log("possibleRoot(" + s + ")");
     scanBlack(s);
     s.color = Color.PURPLE;
     if (!s.buffered) {
@@ -125,21 +129,21 @@ module.exports = function() {
   }
 
   function collectCycles() {
-    console.log("collectCycles");
+    log("collectCycles");
     freeCycles();
     findCycles();
     sigmaPreparation();
   }
 
   function findCycles() {
-    console.log("findCycles");
+    log("findCycles");
     markRoots();
     scanRoots();
     collectRoots();
   }
 
   function markRoots() {
-    console.log("markRoots");
+    log("markRoots");
     var sn = 0;
     for (let si = 0, sk = roots.length; si < sk; ++si) {
       let s = roots[si];
@@ -157,7 +161,7 @@ module.exports = function() {
   }
 
   function scanRoots() {
-    console.log("scanRoots");
+    log("scanRoots");
     for (let si = 0, sk = roots.length; si < sk; ++si) {
       let s = roots[si];
       scan(s);
@@ -165,7 +169,7 @@ module.exports = function() {
   }
 
   function collectRoots() {
-    console.log("collectRoots");
+    log("collectRoots");
     for (let si = 0, sk = roots.length; si < sk; ++si) {
       let s = roots[si];
       if (s.color == Color.WHITE) {
@@ -180,7 +184,7 @@ module.exports = function() {
   }
 
   function markGray(s) {
-    console.log("markGray(" + s + ")");
+    log("markGray(" + s + ")");
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
       s.crc = s.rc - 1; // patch
@@ -194,7 +198,7 @@ module.exports = function() {
   }
 
   function scan(s) {
-    console.log("scan(" + s + ")");
+    log("scan(" + s + ")");
     if (s.color == Color.GRAY) {
       if (s.crc == 0) {
         s.color = Color.WHITE;
@@ -209,7 +213,7 @@ module.exports = function() {
   }
 
   function scanBlack(s) {
-    console.log("scanBlack(" + s + ")");
+    log("scanBlack(" + s + ")");
     if (s.color != Color.BLACK) {
       s.color = Color.BLACK;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
@@ -220,7 +224,7 @@ module.exports = function() {
   }
 
   function collectWhite(s, currentCycle) {
-    console.log("collectWhite(" + s + ")");
+    log("collectWhite(" + s + ")");
     if (s.color == Color.WHITE) {
       s.color = Color.ORANGE;
       s.buffered = true;
@@ -233,7 +237,7 @@ module.exports = function() {
   }
 
   function sigmaPreparation() {
-    console.log("sigmaPreparation");
+    log("sigmaPreparation");
     for (let ci = 0, ck = cycleBuffer.length; ci < ck; ++ci) {
       let c = cycleBuffer[ci];
       for (let ni = 0, nk = c.length; ni < nk; ++ni) {
@@ -258,7 +262,7 @@ module.exports = function() {
   }
 
   function freeCycles() {
-    console.log("freeCycles");
+    log("freeCycles");
     var last = cycleBuffer.length - 1;
     for (let ci = last; ci >= 0; --ci) {
       let c = cycleBuffer[ci];
@@ -284,7 +288,7 @@ module.exports = function() {
   }
 
   function refurbish(c) {
-    console.log("refurbish(" + c + ")");
+    log("refurbish(" + c + ")");
     var first = true;
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
@@ -300,7 +304,7 @@ module.exports = function() {
   }
 
   function freeCycle(c) {
-    console.log("freeCycle(" + c + ")");
+    log("freeCycle(" + c + ")");
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
       n.color = Color.RED;
@@ -319,7 +323,7 @@ module.exports = function() {
   }
 
   function cyclicDecrement(m) {
-    console.log("cyclicDecrement(" + m + ")");
+    log("cyclicDecrement(" + m + ")");
     if (m.color != Color.RED) {
       if (m.color == Color.ORANGE) {
         m.rc = m.rc - 1;
@@ -332,7 +336,7 @@ module.exports = function() {
 
   function free(s) {
     --count;
-    console.log("free(" + s + ") count=" + count);
+    log("free(" + s + ") count=" + count);
     s.freed = true;
   }
 
@@ -355,3 +359,5 @@ module.exports = function() {
     }
   };
 };
+
+module.exports = gc;

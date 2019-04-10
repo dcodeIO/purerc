@@ -1,5 +1,6 @@
 {
   "scripts": {
-    "test": "node test"
+    "test": "node test",
+    "fuzz": "node fuzz"
   }
 }
