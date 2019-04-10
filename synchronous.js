@@ -38,6 +38,22 @@ module.exports = function() {
       this._color = color;
     }
 
+    get isAcyclic() {
+      return !this.cyclesTo(this);
+    }
+
+    cyclesTo(other, except = new Set()) {
+      if (except.has(this)) return false;
+      except.add(this);
+      for (let child of this.children) {
+        if (
+          child == other ||
+          child.cyclesTo(other, except)
+        ) return true;
+      }
+      return false;
+    }
+
     add(s) {
       increment(s);
       this.children.push(s);
@@ -77,7 +93,7 @@ module.exports = function() {
         free(s);
       }
 
-    } else {
+    } else if (!s.isAcyclic) {
       console.log("possibleRoot(" + s + ")");
       if (s.color != Color.PURPLE) {
         s.color = Color.PURPLE;

@@ -34,6 +34,22 @@ module.exports = function() {
       console.log("create(" + this + ") count=" + count);
     }
 
+    get isAcyclic() {
+      return !this.cyclesTo(this);
+    }
+
+    cyclesTo(other, except = new Set()) {
+      if (except.has(this)) return false;
+      except.add(this);
+      for (let child of this.children) {
+        if (
+          child == other ||
+          child.cyclesTo(other, except)
+        ) return true;
+      }
+      return false;
+    }
+
     get color() {
       return this._color;
     }
@@ -76,7 +92,7 @@ module.exports = function() {
     s.rc = s.rc - 1;
     if (s.rc == 0) {
       release(s);
-    } else {
+    } else if (!s.isAcyclic) {
       possibleRoot(s);
     }
   }
@@ -393,11 +409,7 @@ module.exports = function() {
       collectCycles();
     },
     check: function() {
-      console.log("- roots:", roots);
-      console.log("- cycleBuffer:", cycleBuffer);
-      if (count) {
-        if (count) throw Error("leaking " + count + " objects");
-      }
+      if (count) throw Error("leaking " + count + " objects");
     }
   };
 };
