@@ -27,11 +27,20 @@ module.exports = function() {
       this.name = name;
       this.rc = 0;
       this.crc = 0;
-      this.color = Color.BLACK;
+      this._color = Color.BLACK;
       this.buffered = false;
       this.children = [];
       ++count;
       console.log("create(" + this + ") count=" + count);
+    }
+
+    get color() {
+      return this._color;
+    }
+
+    set color(color) {
+      console.log(" " + this.name + ": " + this._color + " -> " + color);
+      this._color = color;
     }
 
     add(s) {
@@ -95,14 +104,14 @@ module.exports = function() {
     }
   }
 
-  function collectCycles() {
+  function collectCycles() { // processCycles in Bacon01Concurrent
     console.log("collectCycles");
     freeCycles();
-    findCycles();
+    findCycles(); // collectCycles in Bacon01Concurrent
     sigmaPreparation();
   }
 
-  function findCycles() {
+  function findCycles() { // collectCycles in Bacon01Concurrent
     console.log("findCycles");
     markRoots();
     scanRoots();
