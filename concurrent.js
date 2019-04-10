@@ -30,6 +30,7 @@ module.exports = function() {
       this._color = Color.BLACK;
       this.buffered = false;
       this.children = [];
+      this.freed = false;
       ++count;
       console.log("create(" + this + ") count=" + count);
     }
@@ -75,6 +76,10 @@ module.exports = function() {
   
     toString() {
       return this.name + ": rc=" + this.rc + " crc=" + this.crc + " color=" + this.color + " buffered=" + this.buffered;
+    }
+
+    checkAlive() {
+      if (this.freed || !count) throw Error("dead");
     }
   }
 
@@ -214,6 +219,8 @@ module.exports = function() {
         }
         markGray(t);
       }
+    } else if (s.crc > 0) {
+      s.crc = s.crc - 1;
     }
 
     // TODO: This is most likely still wrong for other reasons and needs tests.
@@ -392,6 +399,7 @@ module.exports = function() {
   function free(s) {
     --count;
     console.log("free(" + s + ") count=" + count);
+    s.freed = true;
   }
 
   return {
