@@ -22,11 +22,20 @@ module.exports = function() {
     constructor(name) {
       this.name = name;
       this.rc = 0;
-      this.color = Color.BLACK;
+      this._color = Color.BLACK;
       this.buffered = false;
       this.children = [];
       ++count;
       console.log("create(" + this + ") count=" + count);
+    }
+
+    get color() {
+      return this._color;
+    }
+
+    set color(color) {
+      console.log(" " + this.name + ": " + this._color + " -> " + color);
+      this._color = color;
     }
 
     add(s) {

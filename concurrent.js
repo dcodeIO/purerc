@@ -58,12 +58,11 @@ module.exports = function() {
     }
   
     toString() {
-      return this.name + ": rc=" + this.rc + " color=" + this.color + " buffered=" + this.buffered;
+      return this.name + ": rc=" + this.rc + " crc=" + this.crc + " color=" + this.color + " buffered=" + this.buffered;
     }
   }
 
   var roots = [];
-  var currentCycle;
   var cycleBuffer = [];
 
   function increment(s) {
@@ -149,8 +148,8 @@ module.exports = function() {
     for (let si = 0, sk = roots.length; si < sk; ++si) {
       let s = roots[si];
       if (s.color == Color.WHITE) {
-        currentCycle = [];
-        collectWhite(s);
+        let currentCycle = [];
+        collectWhite(s, currentCycle);
         cycleBuffer.push(currentCycle);
       } else {
         s.buffered = false;
@@ -161,29 +160,86 @@ module.exports = function() {
 
   function markGray(s) {
     console.log("markGray(" + s + ")");
+
+    // see comments in scan first
+
+    // Pseudo-code in the paper states:
+
+    // if (s.color != Color.GRAY) {
+    //   s.color = Color.GRAY;
+    //   s.crc = s.rc;
+    //   for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
+    //     let t = s.children[ti];
+    //     markGray(t);
+    //   }
+    // } else if (s.crc > 0) {
+    //   s.crc = s.crc - 1;
+    // }
+
+    // Text states:
+
+    // This is similar to the synchronous version of the procedure, with adaptations to use the
+    // cyclic reference count (CRC) instead of the true reference count (RC). If the color is not
+    // gray, it is set to gray and the CRC is copied from the RC, and then MarkGray is invoked
+    // recursively on the children. If the color is already gray, and if the CRC is not already
+    // zero, the CRC is decremented (the check for non-zero is necessary because concurrent
+    // mutation could otherwise cause the CRC to underflow).
+
+    // But the CRC decrement in particular seems odd, leading to the issue noted in scan below. If
+    // we instead stick to the synchronous algorithm, make it use CRC and do the non-zero check:
+
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
       s.crc = s.rc;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
+        if (s.crc > 0) {
+          s.crc = s.crc - 1;
+        }
         markGray(t);
       }
-    } else if (s.crc > 0) {
-      s.crc = s.crc - 1;
     }
+
+    // TODO: This is most likely still wrong for other reasons and needs tests.
   }
 
   function scan(s) {
     console.log("scan(" + s + ")");
-    if (s.color == Color.GRAY && s.crc == 0) {
-      s.color = Color.WHITE;
-      for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
-        let t = s.children[ti];
-        scan(t);
+
+    // Pseudo-code in the paper states:
+
+    // if (s.color == Color.GRAY && s.crc == 0) {
+    //   s.color = Color.WHITE;
+    //   for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
+    //     let t = s.children[ti];
+    //     scan(t);
+    //   }
+    // } else {
+    //   scanBlack(s);
+    // }
+
+    // But text states:
+
+    // As with MarkGray, simply an adaptation of the synchronous procedure that uses the CRC.
+    // Nodes with zero CRC are colored white; non-black nodes with CRC greater than zero are
+    // recursively re-colored black.
+
+    if (s.color == Color.GRAY) {
+      if (s.crc == 0) {
+        s.color = Color.WHITE;
+        for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
+          let t = s.children[ti];
+          scan(t);
+        }
+      } else {
+        scanBlack(s);
       }
-    } else {
-      scanBlack(s);
     }
+
+    // This change actually unbreaks cycle and cycle1, but not cycle2 etc. because in a situation like
+    //   a -> b -> a
+    // when coloring a WHITE, when traversing child b with crc>0, a is instantly recolored BLACK, in
+    // turn never becoming ORANGE. See markGray for what can be done about this.
   }
 
   function scanBlack(s) {
@@ -197,7 +253,7 @@ module.exports = function() {
     }
   }
 
-  function collectWhite(s) {
+  function collectWhite(s, currentCycle) {
     console.log("collectWhite(" + s + ")");
     if (s.color == Color.WHITE) {
       s.color = Color.ORANGE;
@@ -205,7 +261,7 @@ module.exports = function() {
       currentCycle.push(s);
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
-        collectWhite(t);
+        collectWhite(t, currentCycle);
       }
     }
   }
@@ -337,10 +393,9 @@ module.exports = function() {
       collectCycles();
     },
     check: function() {
+      console.log("- roots:", roots);
+      console.log("- cycleBuffer:", cycleBuffer);
       if (count) {
-        console.log("- roots:", roots);
-        console.log("- currentCycle:", currentCycle);
-        console.log("- cycleBuffer:", cycleBuffer);
         if (count) throw Error("leaking " + count + " objects");
       }
     }

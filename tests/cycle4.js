@@ -9,18 +9,21 @@ function someFunction(a) {
 }
 
 function main() {
-  var s, t, u, v;
+  var s;
   release(
     someFunction(
       retain(
-        s = new Object("outer"),
-        t = new Object("level1->2"),
-        u = new Object("level2->3"),
-        v = new Object("level3->1"),
-        v.add(t),
-        u.add(v),
-        t.add(u),
-        s.add(t)
+        new Object("outer")
+          .add(
+            (s = new Object("level1"))
+              .add(
+                new Object("level2")
+                  .add(
+                    new Object("level3")
+                      .add(s) // cycle back to level1
+                  )
+              )
+          )
       )
     )
   );

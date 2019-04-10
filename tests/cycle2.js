@@ -9,14 +9,15 @@ function someFunction(a) {
 }
 
 function main() {
-  var s, t;
+  var s;
   release(
     someFunction(
       retain(
-        s = new Object("array"),
-        t = new Object("element"),
-        t.add(s),
-        s.add(t)
+        (s = new Object("array"))
+          .add(
+            new Object("element")
+              .add(s) // cycle back to array
+          )
       )
     )
   );

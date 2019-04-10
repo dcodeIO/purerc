@@ -13,8 +13,8 @@ function main() {
   release(
     someFunction(
       retain(
-        s = new Object("cyclic"),
-        s.add(s)
+        (s = new Object("self"))
+          .add(s) // cycle to self
       )
     )
   );

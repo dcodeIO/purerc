@@ -13,14 +13,14 @@ function main() {
   release(
     someFunction(
       retain(
-        (s = new Object("level1"))
+        new Object("outer")
           .add(
-            new Object("level2")
+            (s = new Object("level1"))
               .add(
-                new Object("level3")
+                new Object("level2")
+                  .add(s) // cycles back to level1
                   .add(
-                    new Object("level4")
-                      .add(s) // cycle back to level1
+                    new Object("inner")
                   )
               )
           )

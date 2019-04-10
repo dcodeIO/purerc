@@ -1,11 +1,11 @@
 const { Object, retain, release, collect, check } = require("..")();
 
 function main() {
-  var o;
+  var s;
   release(
     retain(
-      o = new Object("1"),
-      o.add(o)
+      (s = new Object("self"))
+        .add(s) // cycle to self
     )
   );
 }
