@@ -214,12 +214,10 @@ module.exports = function() {
       s.crc = s.rc;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
-        if (s.crc > 0) {
-          s.crc = s.crc - 1;
-        }
         markGray(t);
       }
-    } else if (s.crc > 0) {
+    }
+    if (s.crc > 0) {
       s.crc = s.crc - 1;
     }
 
