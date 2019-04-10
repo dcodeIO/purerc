@@ -6,9 +6,9 @@ if (parallel) {
     const ncpus = require('os').cpus().length;
     for (let i = 0; i < ncpus; ++i) {
       let worker = cluster.fork();
-      worker.on("message", args => {
-        console.log(`[${i}] Run #${args.runCount} (${args.roots} roots, ${args.objects} objects)`);
-      });
+      // worker.on("message", args => {
+      //   console.log(`[${i}] Run #${args.runCount} (${args.roots} roots, ${args.objects} objects)`);
+      // });
     }
     cluster.on("exit", (worker, code, signal) => {
       throw Error(`Worker ${worker.process.pid} died`);
@@ -99,16 +99,19 @@ function run() {
   console.timeEnd("collectFinal");
 
   check();
+  roots.forEach(root => {
+    root.checkDead();
+  });
 
   console.log();
 
-  if (parallel) {
-    process.send({
-      runCount: runCount,
-      roots: roots.length,
-      objects: objects.length
-    });
-  }
+  // if (parallel) {
+  //   process.send({
+  //     runCount: runCount,
+  //     roots: roots.length,
+  //     objects: objects.length
+  //   });
+  // }
 }
 
 while (true) run();

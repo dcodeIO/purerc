@@ -82,8 +82,22 @@ function gc() {
       return this.name + ": rc=" + this.rc + " crc=" + this.crc + " color=" + this.color + " buffered=" + this.buffered;
     }
 
-    checkAlive() {
-      if (this.freed || !count) throw Error("dead");
+    checkAlive(except = new Set()) {
+      if (except.has(this)) return;
+      except.add(this);
+      if (this.freed || !count) throw Error("should be alive");
+      for (let i = 0, k = this.children.length; i < k; ++i) {
+        this.children[i].checkAlive(except);
+      }
+    }
+
+    checkDead(except = new Set()) {
+      if (except.has(this)) return;
+      except.add(this);
+      if (!this.freed) throw Error("should be dead");
+      for (let i = 0, k = this.children.length; i < k; ++i) {
+        this.children[i].checkDead(except);
+      }
     }
   }
 
