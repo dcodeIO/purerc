@@ -52,6 +52,8 @@ function main() {
   cycle1.checkAlive();
   cycle2.checkAlive();
   cycle3.checkAlive();
+  t1.checkAlive();
+  t2.checkAlive();
 
   collect();
   collect();
@@ -78,6 +80,8 @@ function main() {
   cycle1.checkAlive();
   cycle2.checkAlive();
   cycle3.checkAlive();
+  t1.checkAlive();
+  t2.checkAlive();
 
   release(cycle1);
 }
