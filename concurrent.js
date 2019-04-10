@@ -124,14 +124,14 @@ module.exports = function() {
     }
   }
 
-  function collectCycles() { // processCycles in Bacon01Concurrent
+  function collectCycles() {
     console.log("collectCycles");
     freeCycles();
-    findCycles(); // collectCycles in Bacon01Concurrent
+    findCycles();
     sigmaPreparation();
   }
 
-  function findCycles() { // collectCycles in Bacon01Concurrent
+  function findCycles() {
     console.log("findCycles");
     markRoots();
     scanRoots();
@@ -181,70 +181,20 @@ module.exports = function() {
 
   function markGray(s) {
     console.log("markGray(" + s + ")");
-
-    // see comments in scan first
-
-    // Pseudo-code in the paper states:
-
-    // if (s.color != Color.GRAY) {
-    //   s.color = Color.GRAY;
-    //   s.crc = s.rc;
-    //   for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
-    //     let t = s.children[ti];
-    //     markGray(t);
-    //   }
-    // } else if (s.crc > 0) {
-    //   s.crc = s.crc - 1;
-    // }
-
-    // Text states:
-
-    // This is similar to the synchronous version of the procedure, with adaptations to use the
-    // cyclic reference count (CRC) instead of the true reference count (RC). If the color is not
-    // gray, it is set to gray and the CRC is copied from the RC, and then MarkGray is invoked
-    // recursively on the children. If the color is already gray, and if the CRC is not already
-    // zero, the CRC is decremented (the check for non-zero is necessary because concurrent
-    // mutation could otherwise cause the CRC to underflow).
-
-    // But the CRC decrement in the else clause in particular seems odd, because it doesn't cover
-    // any children like the synchronous algorithm does, leading to the issue noted in scan below.
-
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
-      s.crc = s.rc;
+      s.crc = s.rc - 1; // patch
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
         markGray(t);
       }
-    }
-    if (s.crc > 0) {
+    } else if (s.crc > 0) {
       s.crc = s.crc - 1;
     }
-
-    // TODO: This is most likely still wrong for other reasons and needs tests.
   }
 
   function scan(s) {
     console.log("scan(" + s + ")");
-
-    // Pseudo-code in the paper states:
-
-    // if (s.color == Color.GRAY && s.crc == 0) {
-    //   s.color = Color.WHITE;
-    //   for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
-    //     let t = s.children[ti];
-    //     scan(t);
-    //   }
-    // } else {
-    //   scanBlack(s);
-    // }
-
-    // But text states:
-
-    // As with MarkGray, simply an adaptation of the synchronous procedure that uses the CRC.
-    // Nodes with zero CRC are colored white; non-black nodes with CRC greater than zero are
-    // recursively re-colored black.
-
     if (s.color == Color.GRAY) {
       if (s.crc == 0) {
         s.color = Color.WHITE;
@@ -252,15 +202,10 @@ module.exports = function() {
           let t = s.children[ti];
           scan(t);
         }
-      } else {
+      } else { // patch
         scanBlack(s);
       }
     }
-
-    // This change actually unbreaks cycle and cycle1, but not cycle2 etc. because in a situation like
-    //   a -> b -> a
-    // when coloring a WHITE, when traversing child b with crc>0, a is instantly recolored BLACK, in
-    // turn never becoming ORANGE. See markGray for what can be done about this.
   }
 
   function scanBlack(s) {
@@ -317,7 +262,7 @@ module.exports = function() {
     var last = cycleBuffer.length - 1;
     for (let ci = last; ci >= 0; --ci) {
       let c = cycleBuffer[ci];
-      if (deltaTest(c) && sigmaTest(c)) {
+      if (sigmaDeltaTest(c)) {
         freeCycle(c);
       } else {
         refurbish(c);
@@ -326,22 +271,13 @@ module.exports = function() {
     cycleBuffer.length = 0;
   }
 
-  function deltaTest(c) {
-    console.log("deltaTest(" + c + ")");
+  function sigmaDeltaTest(c) {
+    var externRC = 0;
     for (let ni = 0, nk = c.length; ni < nk; ++ni) {
       let n = c[ni];
       if (n.color != Color.ORANGE) {
         return false;
       }
-    }
-    return true;
-  }
-
-  function sigmaTest(c) {
-    console.log("sigmaTest(" + c + ")");
-    var externRC = 0;
-    for (let ni = 0, nk = c.length; ni < nk; ++ni) {
-      let n = c[ni];
       externRC = externRC + n.crc;
     }
     return externRC == 0;
