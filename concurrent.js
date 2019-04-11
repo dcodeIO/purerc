@@ -162,7 +162,12 @@ function gc() {
     for (let si = 0, sk = roots.length; si < sk; ++si) {
       let s = roots[si];
       if (s.color == Color.PURPLE && s.rc > 0) {
-        markGray(s);
+        s.color = Color.GRAY;
+        s.crc = s.rc;
+        for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
+          let t = s.children[ti];
+          markGray(t);
+        }
         roots[sn++] = s;
       } else {
         s.buffered = false;
@@ -201,7 +206,7 @@ function gc() {
     log("markGray(" + s + ")");
     if (s.color != Color.GRAY) {
       s.color = Color.GRAY;
-      s.crc = s.rc - 1; // patch
+      s.crc = s.rc - 1;
       for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
         let t = s.children[ti];
         markGray(t);
@@ -214,14 +219,14 @@ function gc() {
   function scan(s) {
     log("scan(" + s + ")");
     if (s.color == Color.GRAY) {
-      if (s.crc == 0) {
+      if (s.crc > 0) {
+        scanBlack(s);
+      } else {
         s.color = Color.WHITE;
         for (let ti = 0, tk = s.children.length; ti < tk; ++ti) {
           let t = s.children[ti];
           scan(t);
         }
-      } else { // patch
-        scanBlack(s);
       }
     }
   }
