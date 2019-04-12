@@ -7,31 +7,19 @@ Considerations
 
 TL;DR If you can break it, please do.
 
-The concurrent algorithm, as described in the paper, does not work as-is. It misses that in `MarkGray`, each `T` is reachable from `S` as well, which isn't recursively taken into account by the else clause that is responsible to decrement `CRC` of each object reachable from within the graph. Also, unlike its synchronous version, the concurrent `Scan` routine recursively recolors nodes already marked `WHITE` to `BLACK`, preventing them from being collected. Hence, patches applied here are as follows:
+The concurrent algorithm, as described in the paper, does not work as-is. It misses that in `MarkGray`, each `T` is reachable from `S` as well, which isn't recursively taken into account by the else clause that is responsible to decrement `CRC` of each object reachable from within the graph. Also, unlike its synchronous variant, the concurrent `Scan` routine recursively recolors nodes already marked `white` to `black`, preventing them from being collected. Hence, patches applied here are as follows:
 
 ```diff
- MarkRoots()
-   for S in Roots
-     if (color(S) == purple and RC(S) > 0)
-+      color(S) = gray
-+      CRC(S) = RC(S)
-+      for T in children(S)
-+        MarkGray(T)
-     else
-       remove S from Roots
-       buffered(S) = false
-       if (RC(S) == 0)
-         SystemFree(S)
-
  MarkGray(S)
    if (color(S) != gray)
      color(S) = gray
--    CRC(S) = RC(S)
-+    CRC(S) = RC(S) - 1
+     CRC(S) = RC(S)
      for T in children(S)
        MarkGray(T)
-   else if (CRC(S) > 0)
-     CRC(S) = CRC(S) - 1
+-  else if (CRC(S) > 0)
+-    CRC(S) = CRC(S) - 1
++      if (CRC(T) > 0)
++        CRC(T) = CRC(T) - 1
 
  Scan(S)
 -  if (color(S) == gray and CRC(S) == 0)
